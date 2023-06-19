@@ -1,34 +1,29 @@
 import ContactForm from 'components/ContactForm/ContactForm';
 import ContactList from 'components/ContactList/ContactList';
 import Filter from 'components/Filter/Filter';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import styles from './Phonebook.module.css';
 
-class Phonebook extends React.Component {
-  state = {
-    contacts: [
-    ],
-    filter: '',
-  };
+const Phonebook = () => {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
 
-  componentDidMount() {
+  useEffect(() => {
     const storedContacts = localStorage.getItem('contacts');
 
     if (storedContacts) {
-      this.setState({ contacts: JSON.parse(storedContacts) });
+      setContacts(JSON.parse(storedContacts));
     }
-  }
+  }, []);
 
-  componentDidUpdate(prevProps, prevState) {
-    const { contacts } = this.state;
-
-    if (contacts !== prevState.contacts) {
+  useEffect(() => {
+    if (contacts.length > 0) {
       localStorage.setItem('contacts', JSON.stringify(contacts));
     }
-  }
+  }, [contacts]);
 
-  handleAddContact = newContact => {
-    const { contacts } = this.state;
+  const handleAddContact = newContact => {
     const isDuplicateName = contacts.some(
       contact => contact.name.toLowerCase() === newContact.name.toLowerCase()
     );
@@ -38,23 +33,20 @@ class Phonebook extends React.Component {
       return;
     }
 
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, newContact],
-    }));
+    setContacts(prevContacts => [...prevContacts, newContact]);
   };
 
-  handleDeleteContact = contactId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
-    }));
+  const handleDeleteContact = contactId => {
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== contactId)
+    );
   };
 
-  handleChangeFilter = e => {
-    this.setState({ filter: e.target.value });
+  const handleChangeFilter = e => {
+    setFilter(e.target.value);
   };
 
-  getFilteredContacts = () => {
-    const { contacts, filter } = this.state;
+  const getFilteredContacts = () => {
     const normalizedFilter = filter.toLowerCase();
 
     return contacts.filter(contact =>
@@ -62,27 +54,32 @@ class Phonebook extends React.Component {
     );
   };
 
-  render() {
-    const { filter } = this.state;
-    const filteredContacts = this.getFilteredContacts();
+  const filteredContacts = getFilteredContacts();
+  return (
+    <div>
+      <h1 className={styles.title}>Phonebook</h1>
 
-    return (
-      <div>
-        <h1 className={styles.title}>Phonebook</h1>
+      <ContactForm onSubmit={handleAddContact} />
 
-        <ContactForm onSubmit={this.handleAddContact} />
+      <h2 className={styles.subtitle}>Contacts</h2>
 
-        <h2 className={styles.subtitle}>Contacts</h2>
+      <Filter value={filter} onChangeFilter={handleChangeFilter} />
 
-        <Filter value={filter} onChangeFilter={this.handleChangeFilter} />
+      <ContactList
+        contacts={filteredContacts}
+        onDeleteContact={handleDeleteContact}
+      />
+    </div>
+  );
+};
 
-        <ContactList
-          contacts={filteredContacts}
-          onDeleteContact={this.handleDeleteContact}
-        />
-      </div>
-    );
-  }
-}
+Phonebook.propTypes = {
+  contacts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+    })
+  ),
+  filter: PropTypes.string,
+};
 
 export default Phonebook;

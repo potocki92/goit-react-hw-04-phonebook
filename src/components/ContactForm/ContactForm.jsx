@@ -2,32 +2,38 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { v4 as uuid } from 'uuid';
 import styles from './ContactForm.module.css';
+import { useState } from 'react';
 
-class ContactForm extends React.Component {
-  static propTypes = {
-    onSubmit: PropTypes.func.isRequired,
+const ContactForm = ({ onSubmit }) => {
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+
+    switch (name) {
+      case 'name':
+        setName(value);
+        break;
+      case 'number':
+        setNumber(value);
+        break;
+
+      default:
+        return;
+    }
   };
 
-  state = {
-    name: '',
-    number: '',
-  };
-
-  handleChange = e => {
-    this.setState({ [e.target.name]: e.target.value });
-  };
-
-  handleSubmit = e => {
+  const handleSubmit = e => {
     e.preventDefault();
-    this.props.onSubmit({ ...this.state, id: uuid() });
-    this.setState({ name: '', number: '' });
+    onSubmit({ name, number, id: uuid() });
+    setName('');
+    setNumber('');
   };
 
-  render() {
-    const { name, number } = this.state;
-
-    return (
-      <form className={styles.form} onSubmit={this.handleSubmit}>
+  return (
+    <div>
+      <form className={styles.form} onSubmit={handleSubmit}>
         <div>
           <label className={styles.label} htmlFor="name">
             Name
@@ -37,7 +43,7 @@ class ContactForm extends React.Component {
             type="text"
             name="name"
             value={name}
-            onChange={this.handleChange}
+            onChange={handleChange}
             placeholder="Name"
             required
           />
@@ -51,7 +57,7 @@ class ContactForm extends React.Component {
             type="tel"
             name="number"
             value={number}
-            onChange={this.handleChange}
+            onChange={handleChange}
             placeholder="Phone number"
             required
           />
@@ -60,9 +66,9 @@ class ContactForm extends React.Component {
           Add contact
         </button>
       </form>
-    );
-  }
-}
+    </div>
+  );
+};
 
 ContactForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
